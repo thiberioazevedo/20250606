@@ -80,12 +80,13 @@ Destaques técnicos:
 A combinação de uma API robusta, testes automatizados de carga e o uso de migrations e índices garante que a solução Thunders.TechTest seja confiável, escalável e com alta performance, pronta para ambientes de produção exigentes.
 
 Entidades de Relatórios Agregados
+
 Para otimizar o acesso e a performance dos relatórios, foram criadas três entidades específicas no banco de dados, com o objetivo de evitar agregações complexas e custosas em tempo real sobre tabelas de utilização, especialmente considerando o alto volume de registros esperado no sistema. 
 Ao persistir os resultados dos relatórios já processados, a aplicação garante respostas ágeis para as consultas dos usuários e para integrações externas.
 
 Ao inserir registro PedagioUtilizacao, é disparado o evento PedagioUtilizacaoCriadoEvent. 
 Caso o registro já exista no banco de dados, é realizado um update, do contrario é feito um insert.
-Este evento realiza seu processamento somente se a raiz de agregaçãoão está em cache.  
+Este evento realiza seu processamento somente se a raiz de agregaçãoão não estiver em cache.  
 Em seguida registra o evento no cache e persite o registro da agregação, marcando o valor de "procesar" para true.
 Ao processar os relatorios, são filtrados os registros (raiz de agregação do relatorio) com processar como "true".
 Individualmente são removidos do cache e atualizado o calculo especifico de cada relatorio.
@@ -97,12 +98,16 @@ Armazena o valor total faturado por hora em cada cidade, facilitando a geração
 Guarda o faturamento mensal de cada praça, permitindo identificar rapidamente as praças que mais faturaram em cada período.
 -	FaturamentoPracaTipoVeiculoReport:
 Registra a quantidade de veículos por tipo que passaram em cada praça, otimizando a consulta sobre o fluxo de diferentes tipos de veículos.
+
 Benefícios
+
 -	Performance: Consultas aos relatórios são realizadas diretamente sobre tabelas agregadas, reduzindo drasticamente o tempo de resposta.
 -	Escalabilidade: O sistema suporta grandes volumes de dados sem perda de desempenho nas consultas.
 -	Simplicidade: A lógica de agregação é centralizada no processamento, mantendo as consultas simples e eficientes.
 
 Essas entidades são fundamentais para garantir que o sistema atenda aos requisitos de performance e escalabilidade exigidos pelo projeto.
+Durante o processamento em um banco de dados na casa de milhões de registros, nenhuma consulta chagou a 300 milisegundos.
+Praticamente zero o acumulo de mensagens a processar em filas.
 
 ![InicioProcessamentoRelatorios](InicioProcessamentoRelatorios.png)
 ![FimProcessamentoRelatorios](FimProcessamentoRelatorios.png)

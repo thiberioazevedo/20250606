@@ -85,10 +85,10 @@ Para otimizar o acesso e a performance dos relatórios, foram criadas três enti
 Ao persistir os resultados dos relatórios já processados, a aplicação garante respostas ágeis para as consultas dos usuários e para integrações externas.
 
 Ao inserir registro PedagioUtilizacao, é disparado o evento PedagioUtilizacaoCriadoEvent. 
-Caso o registro já exista no banco de dados, é realizado um update, do contrario é feito um insert.
-Este evento realiza seu processamento somente se a raiz de agregaçãoão não estiver em cache.  
+Caso o registro(raiz de agregação do relatorio) já exista no banco de dados, é realizado um update, do contrario é feito um insert.
+Este evento realiza seu processamento somente se a raiz de agregação não estiver em cache.  
 Em seguida registra o evento no cache e persite o registro da agregação, marcando o valor de "procesar" para true.
-Ao processar os relatorios, são filtrados os registros (raiz de agregação do relatorio) com processar como "true".
+Ao processar os relatorios, são filtrados os registros com processar como "true".
 Individualmente são removidos do cache e atualizado o calculo especifico de cada relatorio.
 
 Entidades:

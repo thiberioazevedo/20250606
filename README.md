@@ -77,14 +77,18 @@ Destaques técnicos:
 -	Medição de desempenho: Exibe resultados de sucesso, falha e tempo de resposta, auxiliando na identificação de gargalos.
 -	Validação de robustez: Permite testar a aplicação sob carga, garantindo que os índices e otimizações do banco estejam realmente beneficiando a performance.
 
-Resumo
 A combinação de uma API robusta, testes automatizados de carga e o uso de migrations e índices garante que a solução Thunders.TechTest seja confiável, escalável e com alta performance, pronta para ambientes de produção exigentes.
----
 
 Entidades de Relatórios Agregados
-Para otimizar o acesso e a performance dos relatórios, foram criadas três entidades específicas no banco de dados: FaturamentoHoraCidadeReport, FaturamentoPracaMesReport e FaturamentoPracaTipoVeiculoReport. Essas entidades armazenam os dados já agregados durante o processamento, permitindo consultas rápidas e eficientes, mesmo com grandes volumes de dados.
-Objetivo
-O objetivo dessas entidades é evitar a necessidade de realizar agregações complexas e custosas em tempo real sobre tabelas de utilização, especialmente considerando o alto volume de registros esperado no sistema. Ao persistir os resultados dos relatórios já processados, a aplicação garante respostas ágeis para as consultas dos usuários e para integrações externas.
+Para otimizar o acesso e a performance dos relatórios, foram criadas três entidades específicas no banco de dados, com o objetivo de evitar agregações complexas e custosas em tempo real sobre tabelas de utilização, especialmente considerando o alto volume de registros esperado no sistema. 
+Ao persistir os resultados dos relatórios já processados, a aplicação garante respostas ágeis para as consultas dos usuários e para integrações externas.
+
+Ao inserir registro PedagioUtilizacao, é disparado o evento PedagioUtilizacaoCriadoEvent. 
+Caso o registro já exista no banco de dados, é realizado um update, do contrario é feito um insert.
+Este evento realiza seu processamento somente se a raiz de agregaçãoão está em cache.  
+Em seguida registra o evento no cache e persite o registro da agregação, marcando o valor de "procesar" para true.
+Ao processar os relatorios, são filtrados os registros (raiz de agregação do relatorio) com processar como "true".
+Individualmente são removidos do cache e atualizado o calculo especifico de cada relatorio.
 
 Entidades:
 -	FaturamentoHoraCidadeReport:
@@ -99,7 +103,6 @@ Benefícios
 -	Simplicidade: A lógica de agregação é centralizada no processamento, mantendo as consultas simples e eficientes.
 
 Essas entidades são fundamentais para garantir que o sistema atenda aos requisitos de performance e escalabilidade exigidos pelo projeto.
-
 
 ![InicioProcessamentoRelatorios](InicioProcessamentoRelatorios.png)
 ![FimProcessamentoRelatorios](FimProcessamentoRelatorios.png)

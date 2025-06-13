@@ -1,35 +1,48 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Runtime.CompilerServices;
+﻿using System.Net.Http.Json;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using Thunders.TechTest.ApiService.DTOs;
 using Thunders.TechTest.ApiService.Models;
 
 Console.WriteLine("Iniciando teste de carga...");
 
-ProcessamentoRelatoriosAsync();
+IniciarProcessamentoRelatoriosEmSegundoPlano();
 
-var client = new HttpClient();
-client.Timeout = TimeSpan.FromSeconds(300);
-client.BaseAddress = new Uri("https://localhost:7405/api/PedagioUtilizacao/");
-
-
-int totalRequests = 500;
-int requestsPage = 50;
-int totalRequestsInd = 50;
-var random = new Random();
+var client = CriarHttpClient();
 var cache = 0;
-var millisecondsTimeout = 1000;
 
-Console.WriteLine("Para iniciar o envio individual aperte I, ou qualqer outra tecla para envio em lote");
+ExecutarTesteCarga(client);
 
-var read = Console.ReadKey().KeyChar.ToString().ToUpper();
+HttpClient CriarHttpClient()
+{
+    var client = new HttpClient
+    {
+        Timeout = TimeSpan.FromSeconds(300),
+        BaseAddress = new Uri("https://localhost:7405/api/PedagioUtilizacao/")
+    };
+    return client;
+}
 
-while (read != "I") {
+void ExecutarTesteCarga(HttpClient client)
+{
+    const int totalRequests = 500;
+    const int requestsPage = 50;
+    const int totalRequestsInd = 50;
+    var random = new Random();
+
+    Console.WriteLine("Para iniciar o envio individual aperte I, ou qualquer outra tecla para envio em lote");
+
+    var read = Console.ReadKey().KeyChar.ToString().ToUpper();
+
+    while (true) { 
+        if (read != "I")
+            EnvioEmLote(client, random, totalRequests, requestsPage);
+        else
+            EnvioIndividual(client, random, totalRequestsInd);
+    }
+}
+
+void EnvioEmLote(HttpClient client, Random random, int totalRequests, int requestsPage)
+{
     for (int i = 0; i < totalRequests; i++)
     {
         if (cache >= totalRequests)
@@ -37,14 +50,14 @@ while (read != "I") {
 
         cache += requestsPage;
 
-        EnviarRequisicaoListAsync(client, GerarPedagioUtilizacaoAleatorioList(random));
+        var lista = GerarPedagioUtilizacaoAleatorioList(random, requestsPage);
+        _ = EnviarRequisicaoListAsync(client, lista, requestsPage);
 
         Thread.Sleep(1000);
     }
 }
 
-
-while (read == "I")
+void EnvioIndividual(HttpClient client, Random random, int totalRequestsInd)
 {
     for (int i = 0; i < totalRequestsInd; i++)
     {
@@ -52,26 +65,27 @@ while (read == "I")
             continue;
 
         cache += 1;
-
         var dto = GerarPedagioUtilizacaoAleatorio(random, i);
-        EnviarRequisicaoAsync(client, dto);
+        _ = EnviarRequisicaoAsync(client, dto);
     }
 
     Thread.Sleep(5000);
 }
 
-List<PedagioUtilizacaoCreateRequestDTOSeq> GerarPedagioUtilizacaoAleatorioList(Random random) {
+List<PedagioUtilizacaoCreateRequestDTOSeq> GerarPedagioUtilizacaoAleatorioList(Random random, int requestsPage)
+{
     var list = new List<PedagioUtilizacaoCreateRequestDTOSeq>();
-
     var qtdPadrao = 0;
-    for (int i = 0; i < requestsPage; i++) {
-        qtdPadrao += 1;
-
-        if (qtdPadrao == 2) {
+    for (int i = 0; i < requestsPage; i++)
+    {
+        qtdPadrao++;
+        if (qtdPadrao == 2)
+        {
             qtdPadrao = 0;
             list.Add(GerarPedagioUtilizacaoAleatorio(random, i));
         }
         else
+        {
             list.Add(new PedagioUtilizacaoCreateRequestDTOSeq
             {
                 Cidade = "Maracanaú",
@@ -83,8 +97,8 @@ List<PedagioUtilizacaoCreateRequestDTOSeq> GerarPedagioUtilizacaoAleatorioList(R
                 UF = "CE",
                 ValorPago = Math.Round((decimal)(random.NextDouble() * 490 + 10), 2)
             });
+        }
     }
-
     return list;
 }
 
@@ -132,11 +146,10 @@ async Task EnviarRequisicaoAsync(HttpClient client, PedagioUtilizacaoCreateReque
     {
         Console.WriteLine($"Erro: {dto.GetIndex()} - {ex.Message}");
     }
-
     cache -= 1;
 }
 
-async Task EnviarRequisicaoListAsync(HttpClient client, IList<PedagioUtilizacaoCreateRequestDTOSeq> dto)
+async Task EnviarRequisicaoListAsync(HttpClient client, IList<PedagioUtilizacaoCreateRequestDTOSeq> dto, int requestsPage)
 {
     try
     {
@@ -145,7 +158,7 @@ async Task EnviarRequisicaoListAsync(HttpClient client, IList<PedagioUtilizacaoC
         var response = await client.PostAsJsonAsync("range", dto);
         var fim = DateTime.Now;
         if (response.IsSuccessStatusCode)
-            Console.WriteLine($"Sucesso. Tempo: {fim-inicio}");
+            Console.WriteLine($"Sucesso. Tempo: {fim - inicio}");
         else
             Console.WriteLine($"Falha");
     }
@@ -153,55 +166,47 @@ async Task EnviarRequisicaoListAsync(HttpClient client, IList<PedagioUtilizacaoC
     {
         Console.WriteLine($"Erro: {ex.Message}");
     }
-
     cache -= requestsPage;
 }
 
-// Novo método para chamada ao outro endpoint
+void IniciarProcessamentoRelatoriosEmSegundoPlano()
+{
+    _ = Task.Run(ProcessamentoRelatoriosAsync);
+}
+
 async Task ProcessamentoRelatoriosAsync()
 {
-    var client = new HttpClient();
-    client.Timeout = TimeSpan.FromMinutes(5);
-    client.BaseAddress = new Uri("https://localhost:7405/api/PedagioUtilizacao/");
+    var client = new HttpClient
+    {
+        Timeout = TimeSpan.FromMinutes(5),
+        BaseAddress = new Uri("https://localhost:7405/api/PedagioUtilizacao/")
+    };
 
-    while (true) { 
+    while (true)
+    {
         try
         {
             var inicio = DateTime.Now;
-
-            ConsoleColor corOriginal = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine($"[RelatorioResumo] Inicio: {DateTime.Now}");
-            Console.ForegroundColor = corOriginal;
+            ExibirMensagem("[RelatorioResumo] Inicio: " + DateTime.Now, ConsoleColor.Yellow);
 
             var response = await client.PostAsync("ProcessamentoRelatorios", new StringContent(""));
 
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
+                var processamentoRelatoriosDTO = JsonSerializer.Deserialize<ProcessamentoRelatoriosDTO>(
+                    content,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                );
 
-                var processamentoRelatoriosDTO = JsonSerializer.Deserialize<ProcessamentoRelatoriosDTO>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                corOriginal = Console.ForegroundColor;
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"[RelatorioResumo] Sucesso - Tempo: {(DateTime.Now - inicio).TotalSeconds} segundos");
-
-                Console.WriteLine($"FaturamentoPracaMesReportList: {processamentoRelatoriosDTO.FaturamentoPracaMesReportList?.Count() ?? 0} registros");
-                Console.WriteLine($"FaturamentoHoraCidadeReportList: {processamentoRelatoriosDTO.FaturamentoHoraCidadeReportList?.Count() ?? 0} registros");
-                Console.WriteLine($"FaturamentoPracaTipoVeiculoReportList :{processamentoRelatoriosDTO.FaturamentoPracaTipoVeiculoReportList?.Count() ?? 0} registros");
-
-                Console.ForegroundColor = corOriginal;
-
-
-                //if (content.Length <= 116)
-                //    Thread.Sleep(30000);
+                ExibirMensagem($"[RelatorioResumo] Sucesso - Tempo: {(DateTime.Now - inicio).TotalSeconds} segundos", ConsoleColor.Green);
+                Console.WriteLine($"FaturamentoPracaMesReportList: {processamentoRelatoriosDTO?.FaturamentoPracaMesReportList?.Count() ?? 0} registros");
+                Console.WriteLine($"FaturamentoHoraCidadeReportList: {processamentoRelatoriosDTO?.FaturamentoHoraCidadeReportList?.Count() ?? 0} registros");
+                Console.WriteLine($"FaturamentoPracaTipoVeiculoReportList: {processamentoRelatoriosDTO?.FaturamentoPracaTipoVeiculoReportList?.Count() ?? 0} registros");
             }
             else
             {
-                corOriginal = Console.ForegroundColor;
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"[RelatorioResumo] Falha: {response.StatusCode}");
-                Console.ForegroundColor = corOriginal;
+                ExibirMensagem($"[RelatorioResumo] Falha: {response.StatusCode}", ConsoleColor.Red);
             }
         }
         catch (Exception ex)
@@ -213,10 +218,16 @@ async Task ProcessamentoRelatoriosAsync()
     }
 }
 
+void ExibirMensagem(string mensagem, ConsoleColor cor)
+{
+    var corOriginal = Console.ForegroundColor;
+    Console.ForegroundColor = cor;
+    Console.WriteLine(mensagem);
+    Console.ForegroundColor = corOriginal;
+}
 
-public class PedagioUtilizacaoCreateRequestDTOSeq : PedagioUtilizacaoCreateRequestDTO { 
-    public int Index { private get; set; }
-    public int GetIndex() {
-        return Index;
-    }
+public class PedagioUtilizacaoCreateRequestDTOSeq : PedagioUtilizacaoCreateRequestDTO
+{
+    public int Index { get; set; }
+    public int GetIndex() => Index;
 }

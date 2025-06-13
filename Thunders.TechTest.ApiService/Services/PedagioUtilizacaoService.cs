@@ -78,7 +78,7 @@ namespace Thunders.TechTest.ApiService.Services
 
             foreach (var pedagioUtilizacaoCriadoEvent in pedagioUtilizacaoCriadoEventList)
             {
-                messageSender.SendLocal(pedagioUtilizacaoCriadoEvent);
+                _ = messageSender.SendLocal(pedagioUtilizacaoCriadoEvent);
             }
 
             return mapper.Map<IList<PedagioUtilizacaoDTO>>(pedagioUtilizacaoList);
@@ -91,7 +91,7 @@ namespace Thunders.TechTest.ApiService.Services
 
             await pedagioUtilizacaoRepository.CreateAsync(utilizacao, cancellationToken);
 
-            messageSender.SendLocal(evento);
+            _ = messageSender.SendLocal(evento);
 
             return mapper.Map<PedagioUtilizacaoDTO>(utilizacao);
         }

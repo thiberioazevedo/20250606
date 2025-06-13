@@ -17,7 +17,7 @@ namespace Thunders.TechTest.OutOfBox.Queues
             services.AddRebus(c => c
                 .Transport(t =>
                 {
-                    t.UseRabbitMq(configuration.GetConnectionString("RabbitMq"), "Thunders.TechTest");
+                    t.UseRabbitMq(configuration.GetConnectionString("RabbitMq"), "Thunders.TechTest").Prefetch(10000);
                 }), 
                 onCreated: async bus =>
                 {
@@ -28,7 +28,6 @@ namespace Thunders.TechTest.OutOfBox.Queues
                             await bus.Subscribe(type);
                         }
                     }
-
                 });
 
             return services;

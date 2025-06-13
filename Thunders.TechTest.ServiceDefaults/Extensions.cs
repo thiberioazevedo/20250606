@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -27,9 +29,9 @@ public static class Extensions
             // Turn on resilience by default
             http.AddStandardResilienceHandler(options =>
             {
-                options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(10);
-                options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(10);
-                options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(20); // Needs to be at least the double the AttemptTimeout
+                options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(1000);
+                options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(1000);
+                options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(2000); // Needs to be at least the double the AttemptTimeout
             });
 
             // Turn on service discovery by default
@@ -93,6 +95,54 @@ public static class Extensions
             .AddCheck("self", () => HealthCheckResult.Healthy(), ["live"]);
 
         return builder;
+    }
+
+    public static IServiceCollection AddCustomSwagger(this IServiceCollection services)
+    {
+        services.AddSwaggerGen(c =>
+        {
+            c.CustomSchemaIds(type => type.FullName);
+            c.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Title = "Thiberio Azevedo Barreto",
+                Description = "...",
+                Version = "v1"
+            });
+            /*
+            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                Name = "Authorization",
+                Type = SecuritySchemeType.ApiKey,
+                Scheme = "Bearer",
+                BearerFormat = "JWT",
+                In = ParameterLocation.Header,
+                Description = "JWT Authorization header using the Bearer scheme."
+            });
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement {
+                {
+                    new OpenApiSecurityScheme {
+                        Reference = new OpenApiReference {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    new string[] {}
+                }
+            });
+            */
+        });
+
+        return services;
+    }
+
+    public static void UseCustomSwaggerUI(this IApplicationBuilder app)
+    {
+        var env = app.ApplicationServices.GetRequiredService<IWebHostEnvironment>();
+        if (env.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
     }
 
     public static WebApplication MapDefaultEndpoints(this WebApplication app)

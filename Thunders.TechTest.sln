@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Thunders.TechTest.Tests", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Thunders.TechTest.OutOfBox", "Thunders.TechTest.OutOfBox\Thunders.TechTest.OutOfBox.csproj", "{58A2936F-4A18-4E2F-8F0D-D62DF2A0932F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Thunders.TechTest.ApiService.UnitTests", "Thunders.TechTest.ApiService.UnitTests\Thunders.TechTest.ApiService.UnitTests.csproj", "{5421AFA8-86FE-47EB-8088-AC1611BAF4E8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{58A2936F-4A18-4E2F-8F0D-D62DF2A0932F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{58A2936F-4A18-4E2F-8F0D-D62DF2A0932F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{58A2936F-4A18-4E2F-8F0D-D62DF2A0932F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5421AFA8-86FE-47EB-8088-AC1611BAF4E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5421AFA8-86FE-47EB-8088-AC1611BAF4E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5421AFA8-86FE-47EB-8088-AC1611BAF4E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5421AFA8-86FE-47EB-8088-AC1611BAF4E8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

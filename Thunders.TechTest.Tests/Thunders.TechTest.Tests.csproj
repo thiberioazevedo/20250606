@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Thunders.TechTest.ApiService\Thunders.TechTest.ApiService.csproj" />
     <ProjectReference Include="..\Thunders.TechTest.AppHost\Thunders.TechTest.AppHost.csproj" />
   </ItemGroup>
 
